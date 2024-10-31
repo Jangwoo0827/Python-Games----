@@ -7,7 +7,7 @@ pygame.init()
 SCREEN_WIDTH, SCREEN_HEIGHT = 600, 600
 SQUARE_SIZE = 50
 SQUARE_COLOR = (255, 0, 0)  # Red
-K = .0004
+K = 1.5
 
 # Set up the display
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))

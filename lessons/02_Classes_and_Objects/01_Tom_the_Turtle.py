@@ -46,7 +46,8 @@ class Turtle:
         # Turn left by adjusting the angle counterclockwise
         self.angle = (self.angle + angle) % 360
 
-
+    def right(self, angle):
+        self.angle = (self.angle - angle) % 360
 # Main loop
 
 # Initialize Pygame

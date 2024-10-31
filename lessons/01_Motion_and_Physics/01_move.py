@@ -16,7 +16,7 @@ SCREEN_WIDTH, SCREEN_HEIGHT = 600, 600
 SQUARE_SIZE = 50
 SQUARE_COLOR = (0, 128, 255) # Red-Green-Blue color in the range 0-255
 BACKGROUND_COLOR = (255, 255, 255) # White
-SQUARE_SPEED = 5
+SQUARE_SPEED = 50
 FPS = 60
 
 # Initialize the screen
