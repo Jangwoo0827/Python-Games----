@@ -5,57 +5,44 @@ import sys
 pygame.init()
 
 # Set up the display
-screen = pygame.display.set_mode((600, 360))  # 600x370 window
-pygame.display.set_caption("Stage System with Grounded Triangles")
+screen = pygame.display.set_mode((600, 360))  # 600x360 window
+pygame.display.set_caption("Parkour Thing")
 
 # Colors
 WHITE = (255, 255, 255)
 BLUE = (0, 0, 255)  # Player color
 RED = (255, 0, 0)   # Triangle color
+GREEN = (0, 255, 0) # Wall color
 
-# Player settings (smaller size)
-player_width = 20  # Reduced width
-player_height = 20  # Reduced height
+# Player settings
+player_width = 20
+player_height = 20
 player_x = 10
-player_y = 340  # Start at ground level
-player_vel_x = 0  # Horizontal velocity
+player_y = 340
+player_vel_x = 0
 jumping = False
 player_vel_y = 0
-gravity = 1.0  # Increased gravity for faster fall
+gravity = 1.0
 
 # Speed settings
-move_speed = 8  # Horizontal movement speed
-jump_height = -10  # Decreased jump height
+move_speed = 8
+jump_height = -10
 
 # Game clock
 clock = pygame.time.Clock()
 
-# Stage settings
-current_stage = 0  # Start with the first stage
+# Stage settings (removed Stage 6)
+current_stage = 0
 stages = [
-    {"triangles": [[(250, 340), (260, 360), (240, 360)]]},  # Stage 1 - 1 triangle
-    {"triangles": [[(250, 340), (260, 360), (240, 360)],   # Stage 2 - 2 triangles
-                   [(400, 340), (410, 360), (390, 360)]]
-    },  
-    {"triangles": [[(170, 340), (180, 360), (160, 360)],   # Stage 3 - 3 triangles
-                   [(300, 340), (310, 360), (290, 360)],
-                   [(430, 340), (440, 360), (420, 360)]]
-    },
-    {"triangles": [[(50, 340), (60, 360), (40, 360)],       # Stage 4 - 4 triangles
-                   [(200, 340), (210, 360), (190, 360)],
-                   [(350, 340), (360, 360), (340, 360)],
-                   [(500, 340), (510, 360), (490, 360)]]
-    },
-    {"triangles": [[(100, 340), (110, 360), (90, 360)],   # Stage 5 - 5 triangles
-                   [(200, 340), (210, 360), (190, 360)],
-                   [(300, 340), (310, 360), (290, 360)],
-                   [(400, 340), (410, 360), (390, 360)],
-                   [(500, 340), (510, 360), (490, 360)]]
-    },
+    {"triangles": [[(250, 340), (260, 360), (240, 360)]]},  # Stage 1
+    {"triangles": [[(250, 340), (260, 360), (240, 360)], [(400, 340), (410, 360), (390, 360)]]},  # Stage 2
+    {"triangles": [[(170, 340), (180, 360), (160, 360)], [(300, 340), (310, 360), (290, 360)], [(430, 340), (440, 360), (420, 360)]]},  # Stage 3
+    {"triangles": [[(70, 340), (80, 360), (60, 360)], [(220, 340), (230, 360), (210, 360)], [(370, 340), (380, 360), (360, 360)], [(520, 340), (530, 360), (510, 360)]]},  # Stage 4
+    {"triangles": [[(100, 340), (110, 360), (90, 360)], [(200, 340), (210, 360), (190, 360)], [(300, 340), (310, 360), (290, 360)], [(400, 340), (410, 360), (390, 360)], [(500, 340), (510, 360), (490, 360)]]},  # Stage 5
 ]
 
 # Opacity settings
-max_opacity = 255  # Increased maximum opacity
+max_opacity = 255
 current_opacity = 0
 player_dead = False
 
@@ -68,83 +55,117 @@ while True:
 
     # Key handling
     keys = pygame.key.get_pressed()
-    if not player_dead:
-        if keys[pygame.K_LEFT]:
-            player_vel_x = -move_speed  # Move left
-        elif keys[pygame.K_RIGHT]:
-            player_vel_x = move_speed  # Move right
-        else:
-            player_vel_x = 0  # Stop moving
 
-        if keys[pygame.K_UP]:  # Change to up arrow for jumping
-            if not jumping:  # Allow jump only if not already jumping
-                player_vel_y = jump_height  # Set jump velocity
+    # Store previous position for collision resolution
+    prev_x = player_x
+    prev_y = player_y
+
+    if not player_dead:
+        # Reset horizontal velocity
+        player_vel_x = 0
+        if keys[pygame.K_LEFT]:
+            player_vel_x = -move_speed
+        elif keys[pygame.K_RIGHT]:
+            player_vel_x = move_speed
+
+        if keys[pygame.K_UP]:  # Jump
+            if not jumping:
+                player_vel_y = jump_height
                 jumping = True
 
         # Apply gravity
-        if jumping:
-            player_vel_y += gravity  # Apply gravity to vertical velocity
-            player_y += player_vel_y  # Update player vertical position
-            
-            # Check if player has landed
-            if player_y >= 350:  # Ground level
-                player_y = 340  # Reset to ground level
-                jumping = False  # Reset jumping state
-                player_vel_y = 0  # Reset vertical velocity
+        player_vel_y += gravity
+        player_y += player_vel_y
 
-        # Move player
+        # Move player horizontally
         player_x += player_vel_x
-        player_x = max(0, min(player_x, 600 - player_width))  # Keep player within bounds
+        player_x = max(0, min(player_x, 600 - player_width))
 
         # Player rectangle for collision detection
         player_rect = pygame.Rect(player_x, player_y, player_width, player_height)
 
+        # Check for collision with the ground
+        if player_y >= 340:  # Floor height
+            player_y = 340
+            jumping = False
+            player_vel_y = 0
+
         # Check for collision with triangles
-        for triangle in stages[current_stage]["triangles"]:
+        for triangle in stages[current_stage].get("triangles", []):
             triangle_rect = pygame.draw.polygon(screen, RED, triangle)  # Draw the triangle
             if player_rect.colliderect(triangle_rect):
                 player_dead = True  # Set dead state
                 print("Player has died!")
                 break
-        
+
+        # Check for wall collision
+        if "walls" in stages[current_stage]:
+            for wall in stages[current_stage]["walls"]:
+                wall_rect = pygame.Rect(wall[0][0], wall[0][1], wall[1][0] - wall[0][0], wall[2][1] - wall[0][1])  # Create a rect for the wall
+
+                # Check for wall collision
+                if player_rect.colliderect(wall_rect):
+                    # Horizontal Collision
+                    if player_vel_x > 0:  # Moving right
+                        player_x = wall_rect.left - player_width
+                    elif player_vel_x < 0:  # Moving left
+                        player_x = wall_rect.right
+
+                    # Vertical Collision
+                    if player_vel_y > 0:  # Falling down
+                        if player_rect.bottom <= wall_rect.top and player_rect.right > wall_rect.left and player_rect.left < wall_rect.right:
+                            player_y = wall_rect.top - player_height  # Land on top of the wall
+                            jumping = False
+                            player_vel_y = 0
+
+                    # Prevent jumping through the wall from below
+                    if player_vel_y < 0 and player_rect.colliderect(wall_rect):
+                        player_y = wall_rect.bottom  # Stop the player from going through the wall
+
     # Handle opacity increase if dead
     if player_dead:
-        current_opacity = min(max_opacity, current_opacity + 20)  # Increase opacity at rate of 20
-        player_surface = pygame.Surface((player_width, player_height))
-        player_surface.set_alpha(max_opacity - current_opacity)  # Set inverse opacity for fade effect
+        current_opacity = min(max_opacity, current_opacity + 20)
+        if current_opacity < max_opacity:
+            player_surface = pygame.Surface((player_width, player_height))
+            player_surface.set_alpha(max_opacity - current_opacity)
+            player_surface.fill(BLUE)
+        else:
+            player_surface = None  # Hide player when fully faded out
 
-        player_surface.fill(BLUE)  # Fill with player color
-
-        # Reset player position after reaching full opacity
         if current_opacity >= max_opacity:
-            # Reset player for retrying the same stage
-            player_x = 10  # Reset player horizontal position
-            player_y = 340  # Reset player vertical position
-            current_opacity = 0  # Reset opacity
-            player_dead = False  # Reset dead state
-
+            player_x = 10
+            player_y = 340
+            current_opacity = 0
+            player_dead = False
     else:
-        # Create player surface normally
         player_surface = pygame.Surface((player_width, player_height))
         player_surface.fill(BLUE)
 
     # Drawing
-    screen.fill(WHITE)  # Background color
-    screen.blit(player_surface, (player_x, player_y))  # Draw player
+    screen.fill(WHITE)
+
+    # Only draw the player if not dead
+    if player_surface:
+        screen.blit(player_surface, (player_x, player_y))
 
     # Draw triangles for the current stage
-    for triangle in stages[current_stage]["triangles"]:
-        pygame.draw.polygon(screen, RED, triangle)  # Draw each triangle
+    for triangle in stages[current_stage].get("triangles", []):
+        pygame.draw.polygon(screen, RED, triangle)
+
+    # Draw the wall for the current stage
+    if "walls" in stages[current_stage]:
+        for wall in stages[current_stage]["walls"]:
+            pygame.draw.polygon(screen, GREEN, wall)
 
     pygame.display.flip()
-    clock.tick(30)  # Frame rate
+    clock.tick(30)
 
-    # Check for stage completion (e.g., reaching the right side of the screen)
-    if player_x > 550:  # Example condition to complete the stage
+    # Check for stage completion
+    if player_x > 550:
         if current_stage < len(stages) - 1:
-            current_stage += 1  # Move to the next stage
-            player_x = 30  # Reset player horizontal position
-            player_y = 340  # Reset player vertical position
+            current_stage += 1
+            player_x = 10
+            player_y = 340
             print(f"Stage completed! Moving to Stage {current_stage + 1}.")
         else:
             print("Game Over! You've completed all stages.")
