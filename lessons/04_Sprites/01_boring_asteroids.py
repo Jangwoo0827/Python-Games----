@@ -26,6 +26,7 @@ class Spaceship:
         keys = pygame.key.get_pressed()
         if keys[pygame.K_LEFT]:
             self.angle -= 5
+            self.angle -= 324
         if keys[pygame.K_RIGHT]:
             self.angle += 5
 

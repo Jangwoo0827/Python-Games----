@@ -24,7 +24,7 @@ font_comic_sans_small = pygame.font.Font(font_path, 18)  # Smaller size for "Buy
 
 # Initialize game variables
 score = 0
-burger_per_click = 1  # Burgers generated per click
+burger_per_click = 10  # Burgers generated per click
 cps = 0  # Click per second (passive income)
 
 # Load the image
@@ -92,6 +92,13 @@ while running:
     score_text = font_comic_sans_large.render(f"{score} Burgers", True, BLACK)
     screen.blit(score_text, (10, 10))
 
+    # Display the Cps
+    cps_textt = font_comic_sans_small.render(f"Cps: {cps}", True, BLACK)
+    screen.blit(cps_textt, (10, 50))
+    # Display the Bpc
+    bpc_textt = font_comic_sans_small.render(f"Bpc: {burger_per_click}", True, BLACK)
+    screen.blit(bpc_textt, (10, 90))
+
     # Position BPC Upgrade at bottom-right
     bpc_text = font_comic_sans_small.render(f"BPC Upgrade: {bpc_upgrade_cost} Burgers", True, BLACK)
     screen.blit(bpc_text, (WIDTH - bpc_text.get_width() - 10, HEIGHT - 90))  # Bottom-right corner
@@ -123,11 +130,14 @@ while running:
     # Handle shop purchase logic
     if event.type == pygame.MOUSEBUTTONDOWN:
         if score >= bpc_upgrade_cost and (WIDTH - 90 <= mouse_x <= WIDTH - 10) and (HEIGHT - 50 <= mouse_y <= HEIGHT - 10):
-            burger_per_click += 1  # Increase BPC
+            burger_per_click *= 2  # Increase BPC
             score -= bpc_upgrade_cost  # Deduct the cost
             bpc_upgrade_cost = bpc_upgrade_cost * 2  # Increase the cost for next upgrade
         if score >= cps_upgrade_cost and (10 <= mouse_x <= 90) and (HEIGHT - 50 <= mouse_y <= HEIGHT - 10):
-            cps += 1  # Increase CPS
+            if cps == 0:
+                cps += 5  # Increase CPS
+            else:
+                cps *= 2
             score -= cps_upgrade_cost  # Deduct the cost
             cps_upgrade_cost = cps_upgrade_cost * 2  # Increase the cost for next upgrade
 
