@@ -1,0 +1,148 @@
+import pygame
+import sys
+from pathlib import Path  # Make sure to import Path
+
+# Initialize pygame
+pygame.init()
+
+# Set up the display
+WIDTH, HEIGHT = 600, 400
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Clicker Game")
+
+# Colors
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+GREEN = (0, 255, 0)
+RED = (200, 0, 0)
+BLUE = (0, 0, 255)
+
+# Load Comic Sans MS font from the specified path
+font_path = Path(__file__).parent.parent / 'Fonts' / 'ComicSansMS.ttf'  # Adjust the path
+font_comic_sans_large = pygame.font.Font(font_path, 24)  # Adjusted to smaller size for large text
+font_comic_sans_small = pygame.font.Font(font_path, 18)  # Smaller size for "Buy" button text
+
+# Initialize game variables
+score = 0
+burger_per_click = 1  # Burgers generated per click
+cps = 0  # Click per second (passive income)
+
+# Load the image
+image_path = Path(__file__).parent.parent / 'Image' / 'Burger.png'  # Fix image path
+original_image = pygame.image.load(image_path)  # Load original image
+button_image = original_image.copy()  # Initially, use the original image
+button_rect = button_image.get_rect()  # Get the rectangle for positioning
+
+# Store the original size of the image
+original_width, original_height = original_image.get_size()
+
+# Set the smaller initial size (e.g., 50% of the original size)
+initial_scale_factor = 0.9
+scale_factor = initial_scale_factor  # Start with a smaller size
+
+# Center the button
+button_rect.center = (WIDTH // 2, HEIGHT // 2 - 50)  # Move it slightly up to give space for shop below
+
+# Variables for scaling
+scale_factor = initial_scale_factor  # Initial scale factor
+scale_speed = 0.05  # Speed of scaling
+# Upgrades
+cps_upgrade_cost = 30  # Cost for CPS+ upgrade
+bpc_upgrade_cost = 30  # Cost for Burgers per Click upgrade
+
+# Timer for CPS
+last_cps_time = pygame.time.get_ticks()  # track when CPS was last added
+
+# Game loop
+running = True
+while running:
+    screen.fill(WHITE)
+
+    # Handle events
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if button_rect.collidepoint(event.pos):  # Check if the button is clicked
+                score += burger_per_click
+
+    # Check if mouse is over the button (burger)
+    mouse_x, mouse_y = pygame.mouse.get_pos()  # Get the mouse position
+    if button_rect.collidepoint(mouse_x, mouse_y):
+        # If mouse is over the button, gradually increase the size of the burger
+        if scale_factor < 1.0:  # Limit the size to 1.0x original size (smaller max size)
+            scale_factor += scale_speed  # Increase the size faster
+    else:
+        # If mouse is not over the button, gradually return to the original state
+        if scale_factor > initial_scale_factor:  # Return to the initial smaller size
+            scale_factor -= scale_speed  # Shrink back gradually
+
+    # Scale the image according to the current scale_factor
+    new_width = int(original_width * scale_factor)
+    new_height = int(original_height * scale_factor)
+    button_image = pygame.transform.scale(original_image, (new_width, new_height))
+
+    # Update the button_rect to be centered with the scaled image
+    button_rect = button_image.get_rect(center=button_rect.center)
+
+    # Draw the button (image)
+    screen.blit(button_image, button_rect)  # Blit the image onto the screen
+
+    # Display the score with Comic Sans MS font
+    score_text = font_comic_sans_large.render(f"{score} Burgers", True, BLACK)
+    screen.blit(score_text, (10, 10))
+
+    # Position BPC Upgrade at bottom-right
+    bpc_text = font_comic_sans_small.render(f"BPC Upgrade: {bpc_upgrade_cost} Burgers", True, BLACK)
+    screen.blit(bpc_text, (WIDTH - bpc_text.get_width() - 10, HEIGHT - 90))  # Bottom-right corner
+
+    # Make sure the "Buy" button is properly spaced and visible
+    if score >= bpc_upgrade_cost:
+        pygame.draw.rect(screen, GREEN, (WIDTH - 90, HEIGHT - 50, 80, 40))  # Buy button area (bottom-right)
+        buy_bpc_text = font_comic_sans_small.render("Buy", True, WHITE)  # Comic Sans for "Buy"
+        screen.blit(buy_bpc_text, (WIDTH - 50 - buy_bpc_text.get_width() // 2, HEIGHT - 45))  # Center the text
+    else:
+        pygame.draw.rect(screen, RED, (WIDTH - 90, HEIGHT - 50, 80, 40))  # Disabled button
+        buy_bpc_text = font_comic_sans_small.render("Buy", True, WHITE)  # Comic Sans for "Buy"
+        screen.blit(buy_bpc_text, (WIDTH - 50 - buy_bpc_text.get_width() // 2, HEIGHT - 45))  # Center the text
+
+    # Position CPS Upgrade at bottom-left
+    cps_text = font_comic_sans_small.render(f"CPS Upgrade: {cps_upgrade_cost} Burgers", True, BLACK)
+    screen.blit(cps_text, (10, HEIGHT - 90))  # Bottom-left corner
+
+    # Make sure the "Buy" button for CPS is properly spaced and visible
+    if score >= cps_upgrade_cost:
+        pygame.draw.rect(screen, GREEN, (10, HEIGHT - 50, 80, 40))  # Buy button area (bottom-left)
+        buy_cps_text = font_comic_sans_small.render("Buy", True, WHITE)  # Comic Sans for "Buy"
+        screen.blit(buy_cps_text, (50 - buy_cps_text.get_width() // 2, HEIGHT - 45))  # Center the text
+    else:
+        pygame.draw.rect(screen, RED, (10, HEIGHT - 50, 80, 40))  # Disabled button
+        buy_cps_text = font_comic_sans_small.render("Buy", True, WHITE)  # Comic Sans for "Buy"
+        screen.blit(buy_cps_text, (50 - buy_cps_text.get_width() // 2, HEIGHT - 45))  # Center the text
+
+    # Handle shop purchase logic
+    if event.type == pygame.MOUSEBUTTONDOWN:
+        if score >= bpc_upgrade_cost and (WIDTH - 90 <= mouse_x <= WIDTH - 10) and (HEIGHT - 50 <= mouse_y <= HEIGHT - 10):
+            burger_per_click += 1  # Increase BPC
+            score -= bpc_upgrade_cost  # Deduct the cost
+            bpc_upgrade_cost = bpc_upgrade_cost * 2  # Increase the cost for next upgrade
+        if score >= cps_upgrade_cost and (10 <= mouse_x <= 90) and (HEIGHT - 50 <= mouse_y <= HEIGHT - 10):
+            cps += 1  # Increase CPS
+            score -= cps_upgrade_cost  # Deduct the cost
+            cps_upgrade_cost = cps_upgrade_cost * 2  # Increase the cost for next upgrade
+
+    # Passive CPS generation
+    current_time = pygame.time.get_ticks()  # Get the current time in milliseconds
+    if current_time - last_cps_time >= 1000:  # Check if 1 second has passed
+        score += cps  # Generate burgers per second
+        last_cps_time = current_time  # Reset the timer
+
+    # Update the display
+    pygame.display.flip()
+
+    # Control the frame rate
+    pygame.time.Clock().tick(60)
+
+# Quit pygame
+pygame.quit()
+sys.exit()
