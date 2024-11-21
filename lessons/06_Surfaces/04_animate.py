@@ -7,7 +7,7 @@ images = Path(__file__).parent / 'images'
 
 def scale_sprites(sprites, scale):
     """Scale a list of sprites by a given factor.
-
+        
     Args:
         sprites (list): List of pygame.Surface objects.
         scale (int): Scale factor.

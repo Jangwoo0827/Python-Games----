@@ -24,7 +24,7 @@ font_comic_sans_small = pygame.font.Font(font_path, 18)  # Smaller size for "Buy
 
 # Initialize game variables
 score = 0
-burger_per_click = 10  # Burgers generated per click
+burger_per_click = 100  # Burgers generated per click
 cps = 0  # Click per second (passive income)
 
 # Load the image
